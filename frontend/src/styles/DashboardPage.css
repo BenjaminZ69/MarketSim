@@ -63,6 +63,11 @@
 .dashboard-nav-link.is-active::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px 2px 0 0; background: #159b6e; }
 
 .dashboard-header-actions { display: flex; align-items: center; gap: 20px; }
+.api-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid #e1e7ed; border-radius: 999px; color: #657287; background: #f8fafc; font-size: 9px; font-weight: 700; white-space: nowrap; }
+.api-status-dot { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
+.api-status-connecting { color: #806b37; border-color: #eee5cf; background: #fbf8ef; }
+.api-status-connected { color: #16734f; border-color: #d5ecdf; background: #eef8f2; }
+.api-status-unavailable { color: #a63d3d; border-color: #f0dada; background: #fdf2f1; }
 .demo-indicator { display: inline-flex; align-items: center; gap: 7px; color: #8491a1; font-size: 9px; font-weight: 750; letter-spacing: .9px; white-space: nowrap; }
 .demo-indicator > span { width: 6px; height: 6px; border-radius: 50%; background: #21b878; box-shadow: 0 0 0 3px #e7f7ef; }
 .signout-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 1px solid #e1e7ed; border-radius: 7px; color: #435166; background: #fff; font-size: 11px; font-weight: 650; cursor: pointer; transition: background .15s, border-color .15s; }
