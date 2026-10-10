@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { getApiHealth } from '../services/api'
 import '../styles/DashboardPage.css'
 
 type WatchlistStock = {
@@ -98,8 +100,28 @@ function DashboardLoadingState() {
 }
 
 export default function DashboardPage() {
-  // Replace this mock-ready flag with the dashboard data request state when an API is added.
   const isLoading = false
+  const [apiStatus, setApiStatus] = useState<'connecting' | 'connected' | 'unavailable'>('connecting')
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    getApiHealth(controller.signal)
+      .then(({ status }) => {
+        setApiStatus(status === 'ok' ? 'connected' : 'unavailable')
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setApiStatus('unavailable')
+      })
+
+    return () => controller.abort()
+  }, [])
+
+  const apiStatusText = {
+    connecting: 'Connecting…',
+    connected: 'API connected',
+    unavailable: 'API unavailable',
+  }[apiStatus]
 
   return (
     <div className="dashboard-page">
@@ -122,6 +144,10 @@ export default function DashboardPage() {
           </nav>
 
           <div className="dashboard-header-actions">
+            <span className={`api-status api-status-${apiStatus}`} role="status" aria-live="polite">
+              <span className="api-status-dot" aria-hidden="true" />
+              {apiStatusText}
+            </span>
             <span className="demo-indicator"><span aria-hidden="true" /> DEMO ACCOUNT</span>
             <button className="signout-button" type="button" title="Demo button; no account is connected">
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
