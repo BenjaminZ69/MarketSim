@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { getApiHealth, getStockQuote, type StockQuote } from '../services/api'
+import {
+  getApiHealth,
+  getStockHistory,
+  getStockQuote,
+  type StockHistory,
+  type StockQuote,
+} from '../services/api'
 import '../styles/DashboardPage.css'
 
 type WatchlistStock = {
@@ -21,6 +27,9 @@ const QUOTE_SYMBOLS = [
 ]
 
 type Direction = 'up' | 'down'
+type HistoryLoadState =
+  | { symbol: string; status: 'success'; data: StockHistory }
+  | { symbol: string; status: 'error' }
 
 function directionFor(changePercent: number): Direction {
   return changePercent >= 0 ? 'up' : 'down'
@@ -48,6 +57,61 @@ function formatMoney(value: number, currency = 'USD') {
 
 function formatChange(value: number) {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+function formatHistoryDate(value: string) {
+  const date = new Date(`${value.slice(0, 10)}T00:00:00Z`)
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(date)
+}
+
+function StockHistoryChart({ history }: { history: StockHistory }) {
+  const prices = [...history.prices].sort((first, second) =>
+    first.datetime.localeCompare(second.datetime),
+  )
+
+  if (prices.length === 0) {
+    return <p className="history-message" role="status">No historical prices are available.</p>
+  }
+
+  const width = 700
+  const height = 220
+  const padding = { top: 18, right: 12, bottom: 34, left: 12 }
+  const chartWidth = width - padding.left - padding.right
+  const chartHeight = height - padding.top - padding.bottom
+  const values = prices.map(({ close }) => close)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const coordinates = prices.map(({ close }, index) => ({
+    x: padding.left + (prices.length === 1 ? chartWidth / 2 : (index / (prices.length - 1)) * chartWidth),
+    y: padding.top + ((max - close) / range) * chartHeight,
+  }))
+  const labels = [...new Set([0, Math.floor((prices.length - 1) / 2), prices.length - 1])]
+
+  return (
+    <div className="history-chart-wrap">
+      <svg className="history-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${history.symbol} closing prices over the last 30 days`}>
+        {[0, 0.5, 1].map((fraction) => {
+          const y = padding.top + fraction * chartHeight
+          return <line key={fraction} x1={padding.left} x2={width - padding.right} y1={y} y2={y} className="history-gridline" />
+        })}
+        <polyline
+          points={coordinates.map(({ x, y }) => `${x},${y}`).join(' ')}
+          className="history-line"
+        />
+        {coordinates.length === 1 && <circle cx={coordinates[0].x} cy={coordinates[0].y} r="4" className="history-point" />}
+      </svg>
+      <div className="history-date-axis" aria-hidden="true">
+        {labels.map((index) => (
+          <span key={index}>{formatHistoryDate(prices[index].datetime)}</span>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function ArrowMark({ direction }: { direction: Direction }) {
@@ -114,6 +178,8 @@ function DashboardLoadingState() {
 
 export default function DashboardPage() {
   const [quotes, setQuotes] = useState<Record<string, StockQuote>>({})
+  const [historySymbol, setHistorySymbol] = useState('AAPL')
+  const [historyLoadState, setHistoryLoadState] = useState<HistoryLoadState | null>(null)
   const [failedQuoteSymbols, setFailedQuoteSymbols] = useState<string[]>([])
   const [quotesLoading, setQuotesLoading] = useState(true)
   const [apiStatus, setApiStatus] = useState<'connecting' | 'connected' | 'unavailable'>('connecting')
@@ -122,6 +188,9 @@ export default function DashboardPage() {
   const availableQuotes = Object.values(quotes)
   const topGainers = getTopMovers(availableQuotes, 'up')
   const topLosers = getTopMovers(availableQuotes, 'down')
+  const currentHistoryState = historyLoadState?.symbol === historySymbol
+    ? historyLoadState
+    : null
 
   useEffect(() => {
     const controller = new AbortController()
@@ -156,6 +225,24 @@ export default function DashboardPage() {
 
     return () => controller.abort()
   }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    getStockHistory(historySymbol, 30, controller.signal)
+      .then((result) => {
+        if (!controller.signal.aborted) {
+          setHistoryLoadState({ symbol: historySymbol, status: 'success', data: result })
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setHistoryLoadState({ symbol: historySymbol, status: 'error' })
+        }
+      })
+
+    return () => controller.abort()
+  }, [historySymbol])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -260,6 +347,30 @@ export default function DashboardPage() {
                   <p className="summary-value summary-positive">+$3,294<span className="summary-cents">.26</span></p>
                   <p className="summary-footnote"><span className="change-badge change-up"><ArrowMark direction="up" /> +6.59%</span> all time</p>
                 </article>
+              </div>
+            </section>
+
+            <section className="dashboard-panel history-panel" aria-labelledby="history-title">
+              <div className="panel-heading history-heading">
+                <div>
+                  <h2 id="history-title">Price history</h2>
+                  <p>Daily closing prices over the last 30 days</p>
+                </div>
+                <label className="history-symbol-label">
+                  <span>Stock</span>
+                  <select value={historySymbol} onChange={(event) => setHistorySymbol(event.target.value)}>
+                    {watchlist.map(({ symbol }) => <option key={symbol} value={symbol}>{symbol}</option>)}
+                  </select>
+                </label>
+              </div>
+              <div className="history-chart-content" aria-live="polite" aria-busy={!currentHistoryState}>
+                {!currentHistoryState ? (
+                  <p className="history-message" role="status">Loading {historySymbol} price history…</p>
+                ) : currentHistoryState.status === 'error' ? (
+                  <p className="history-message history-error" role="status">Historical prices are temporarily unavailable. Please try again later.</p>
+                ) : (
+                  <StockHistoryChart history={currentHistoryState.data} />
+                )}
               </div>
             </section>
 

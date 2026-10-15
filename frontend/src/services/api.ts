@@ -21,6 +21,23 @@ export type StockQuote = {
   last_updated: string
 }
 
+export type StockPricePoint = {
+  datetime: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number | null
+}
+
+export type StockHistory = {
+  symbol: string
+  exchange: string | null
+  currency: string | null
+  interval: string
+  prices: StockPricePoint[]
+}
+
 export async function getApiHealth(signal?: AbortSignal): Promise<ApiHealth> {
   const response = await fetch(`${API_BASE_URL}/api/health`, {
     method: 'GET',
@@ -53,4 +70,26 @@ export async function getStockQuote(
   }
 
   return response.json() as Promise<StockQuote>
+}
+
+export async function getStockHistory(
+  symbol: string,
+  days = 30,
+  signal?: AbortSignal,
+): Promise<StockHistory> {
+  const query = new URLSearchParams({ days: String(days) })
+  const response = await fetch(
+    `${API_BASE_URL}/api/stocks/${encodeURIComponent(symbol)}/history?${query}`,
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal,
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error('Stock history request failed.')
+  }
+
+  return response.json() as Promise<StockHistory>
 }
