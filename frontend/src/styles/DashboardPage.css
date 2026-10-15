@@ -149,8 +149,9 @@
 .watchlist-company { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
 .watchlist-company strong { color: #27384f; font-size: 10px; font-weight: 700; }
 .watchlist-company > span { overflow: hidden; max-width: 190px; color: #929dac; font-size: 9px; font-weight: 450; text-overflow: ellipsis; white-space: nowrap; }
-.mock-data-note { display: flex; align-items: center; gap: 5px; margin: auto 0 0; padding: 11px 18px; border-top: 1px solid #f1f3f6; color: #9aa5b2; font-size: 9px; }
-.mock-data-note span { color: #8c99a8; font-size: 11px; }
+.quote-data-note { display: flex; align-items: center; gap: 5px; margin: auto 0 0; padding: 11px 18px; border-top: 1px solid #f1f3f6; color: #9aa5b2; font-size: 9px; }
+.quote-data-note span { color: #8c99a8; font-size: 11px; }
+.quote-unavailable { color: #929dac; font-size: 9px; font-weight: 500; }
 .dashboard-empty { color: #8592a2; font-size: 10px; text-align: center; }
 .watchlist-empty { min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 24px; }
 .empty-watch-icon { display: grid; width: 39px; height: 39px; margin-bottom: 3px; place-items: center; border-radius: 12px; background: #f1f4f7; color: #6e7f92; font-size: 25px; }
@@ -245,7 +246,7 @@
   .watchlist-table { min-width: 415px; }
   .watchlist-table th, .watchlist-table td { padding-inline: 10px; }
   .watchlist-table tbody th, .watchlist-table thead th:first-child { padding-left: 12px; }
-  .mock-data-note { padding-inline: 12px; }
+  .quote-data-note { padding-inline: 12px; }
   .movers-column { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .movers-panel { min-height: auto; }
   .mover-name-wrap > span { max-width: 180px; }

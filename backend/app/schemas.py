@@ -13,3 +13,20 @@ class StockQuoteResponse(BaseModel):
     daily_high: float
     daily_low: float
     last_updated: str
+
+
+class StockPricePoint(BaseModel):
+    datetime: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int | None = None
+
+
+class StockHistoryResponse(BaseModel):
+    symbol: str
+    exchange: str | None
+    currency: str | None
+    interval: str
+    prices: list[StockPricePoint]

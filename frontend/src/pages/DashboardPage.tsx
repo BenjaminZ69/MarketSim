@@ -1,58 +1,56 @@
 import { useEffect, useState } from 'react'
-import { getApiHealth } from '../services/api'
+import { getApiHealth, getStockQuote, type StockQuote } from '../services/api'
 import '../styles/DashboardPage.css'
 
 type WatchlistStock = {
   symbol: string
-  company: string
-  price: number
-  changePercent: number
-  changeDirection: 'up' | 'down'
   initials: string
   tone: string
 }
 
 const watchlist: WatchlistStock[] = [
-  { symbol: 'NVDA', company: 'NVIDIA Corporation', price: 875.28, changePercent: 2.48, changeDirection: 'up', initials: 'N', tone: 'violet' },
-  { symbol: 'AAPL', company: 'Apple Inc.', price: 189.84, changePercent: 0.72, changeDirection: 'up', initials: 'A', tone: 'slate' },
-  { symbol: 'MSFT', company: 'Microsoft Corporation', price: 425.22, changePercent: 1.16, changeDirection: 'up', initials: 'M', tone: 'blue' },
-  { symbol: 'TSLA', company: 'Tesla, Inc.', price: 172.63, changePercent: 1.34, changeDirection: 'down', initials: 'T', tone: 'red' },
-  { symbol: 'AMZN', company: 'Amazon.com, Inc.', price: 180.96, changePercent: 0.58, changeDirection: 'up', initials: 'a', tone: 'amber' },
+  { symbol: 'NVDA', initials: 'N', tone: 'violet' },
+  { symbol: 'AAPL', initials: 'A', tone: 'slate' },
+  { symbol: 'MSFT', initials: 'M', tone: 'blue' },
+  { symbol: 'TSLA', initials: 'T', tone: 'red' },
+  { symbol: 'AMZN', initials: 'a', tone: 'amber' },
 ]
 
-type MarketMover = {
-  symbol: string
-  company: string
-  price: number
-  changePercent: number
+const QUOTE_SYMBOLS = [
+  ...new Set([...watchlist.map(({ symbol }) => symbol), 'META', 'INTC', 'DIS']),
+]
+
+type Direction = 'up' | 'down'
+
+function directionFor(changePercent: number): Direction {
+  return changePercent >= 0 ? 'up' : 'down'
 }
 
-const topGainers: MarketMover[] = [
-  { symbol: 'NVDA', company: 'NVIDIA', price: 875.28, changePercent: 2.48 },
-  { symbol: 'META', company: 'Meta Platforms', price: 505.95, changePercent: 1.82 },
-  { symbol: 'MSFT', company: 'Microsoft', price: 425.22, changePercent: 1.16 },
-]
+function getTopMovers(quotes: StockQuote[], direction: Direction): StockQuote[] {
+  const matchingQuotes = quotes.filter((quote) =>
+    direction === 'up' ? quote.percent_change > 0 : quote.percent_change < 0,
+  )
+  matchingQuotes.sort((first, second) =>
+    direction === 'up'
+      ? second.percent_change - first.percent_change
+      : first.percent_change - second.percent_change,
+  )
+  return matchingQuotes.slice(0, 3)
+}
 
-const topLosers: MarketMover[] = [
-  { symbol: 'TSLA', company: 'Tesla', price: 172.63, changePercent: -1.34 },
-  { symbol: 'INTC', company: 'Intel', price: 43.12, changePercent: -0.86 },
-  { symbol: 'DIS', company: 'Walt Disney', price: 112.46, changePercent: -0.42 },
-]
-
-const money = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
-
-function formatMoney(value: number) {
-  return money.format(value)
+function formatMoney(value: number, currency = 'USD') {
+  const safeCurrency = /^[A-Z]{3}$/.test(currency) ? currency : 'USD'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: safeCurrency,
+  }).format(value)
 }
 
 function formatChange(value: number) {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
 }
 
-function ArrowMark({ direction }: { direction: 'up' | 'down' }) {
+function ArrowMark({ direction }: { direction: Direction }) {
   return (
     <svg className={`market-arrow market-arrow-${direction}`} viewBox="0 0 12 12" aria-hidden="true">
       <path d={direction === 'up' ? 'M2 8.5 8.5 2M3 2h5.5v5.5' : 'M2 3.5 8.5 10M3 10h5.5V4.5'} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -60,30 +58,45 @@ function ArrowMark({ direction }: { direction: 'up' | 'down' }) {
   )
 }
 
-function MarketMoverList({ movers, direction }: { movers: MarketMover[]; direction: 'up' | 'down' }) {
+function MarketMoverList({
+  movers,
+  direction,
+  isLoading,
+}: {
+  movers: StockQuote[]
+  direction: Direction
+  isLoading: boolean
+}) {
+  if (isLoading) {
+    return <p className="dashboard-empty" role="status">Loading stock quotes…</p>
+  }
+
   if (movers.length === 0) {
-    return <p className="dashboard-empty" role="status">No {direction === 'up' ? 'gainers' : 'losers'} to show right now.</p>
+    return <p className="dashboard-empty" role="status">No live {direction === 'up' ? 'gainers' : 'losers'} available.</p>
   }
 
   return (
     <ul className="mover-list">
-      {movers.map((mover) => (
-        <li className="mover-row" key={mover.symbol}>
-          <div className="mover-company">
-            <span className={`mover-symbol mover-symbol-${direction}`}>{mover.symbol.slice(0, 1)}</span>
-            <span className="mover-name-wrap">
-              <strong>{mover.symbol}</strong>
-              <span>{mover.company}</span>
-            </span>
-          </div>
-          <div className="mover-value">
-            <span>{formatMoney(mover.price)}</span>
-            <span className={`change-value change-${direction}`}>
-              <ArrowMark direction={direction} /> {formatChange(mover.changePercent)}
-            </span>
-          </div>
-        </li>
-      ))}
+      {movers.map((mover) => {
+        const moverDirection = directionFor(mover.percent_change)
+        return (
+          <li className="mover-row" key={mover.symbol}>
+            <div className="mover-company">
+              <span className={`mover-symbol mover-symbol-${moverDirection}`}>{mover.symbol.slice(0, 1)}</span>
+              <span className="mover-name-wrap">
+                <strong>{mover.symbol}</strong>
+                <span>{mover.company_name || mover.symbol}</span>
+              </span>
+            </div>
+            <div className="mover-value">
+              <span>{formatMoney(mover.price, mover.currency || 'USD')}</span>
+              <span className={`change-value change-${moverDirection}`}>
+                <ArrowMark direction={moverDirection} /> {formatChange(mover.percent_change)}
+              </span>
+            </div>
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -100,8 +113,49 @@ function DashboardLoadingState() {
 }
 
 export default function DashboardPage() {
-  const isLoading = false
+  const [quotes, setQuotes] = useState<Record<string, StockQuote>>({})
+  const [failedQuoteSymbols, setFailedQuoteSymbols] = useState<string[]>([])
+  const [quotesLoading, setQuotesLoading] = useState(true)
   const [apiStatus, setApiStatus] = useState<'connecting' | 'connected' | 'unavailable'>('connecting')
+
+  const isLoading = quotesLoading
+  const availableQuotes = Object.values(quotes)
+  const topGainers = getTopMovers(availableQuotes, 'up')
+  const topLosers = getTopMovers(availableQuotes, 'down')
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadQuotes() {
+      await Promise.all(
+        QUOTE_SYMBOLS.map(async (symbol) => {
+          try {
+            const quote = await getStockQuote(symbol, controller.signal)
+            if (!controller.signal.aborted) {
+              setQuotes((currentQuotes) => ({
+                ...currentQuotes,
+                [symbol]: quote,
+              }))
+            }
+          } catch {
+            if (!controller.signal.aborted) {
+              setFailedQuoteSymbols((failedSymbols) =>
+                failedSymbols.includes(symbol)
+                  ? failedSymbols
+                  : [...failedSymbols, symbol],
+              )
+            }
+          }
+        }),
+      )
+
+      if (!controller.signal.aborted) setQuotesLoading(false)
+    }
+
+    void loadQuotes()
+
+    return () => controller.abort()
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -228,24 +282,49 @@ export default function DashboardPage() {
                 ) : (
                   <div className="watchlist-table-wrap">
                     <table className="watchlist-table">
-                      <caption className="visually-hidden">Mock stock watchlist with current prices and daily percentage changes</caption>
+                      <caption className="visually-hidden">Stock watchlist with prices and daily percentage changes from the MarketSim API</caption>
                       <thead><tr><th scope="col">Company</th><th scope="col">Price</th><th scope="col">Daily change</th></tr></thead>
                       <tbody>
-                        {watchlist.map((stock) => (
-                          <tr key={stock.symbol}>
-                            <th scope="row">
-                              <span className={`company-avatar avatar-${stock.tone}`} aria-hidden="true">{stock.initials}</span>
-                              <span className="watchlist-company"><strong>{stock.symbol}</strong><span>{stock.company}</span></span>
-                            </th>
-                            <td>{formatMoney(stock.price)}</td>
-                            <td><span className={`change-badge change-${stock.changeDirection}`}><ArrowMark direction={stock.changeDirection} /> {formatChange(stock.changePercent)}</span></td>
-                          </tr>
-                        ))}
+                        {watchlist.map((stock) => {
+                          const quote = quotes[stock.symbol]
+                          return (
+                            <tr key={stock.symbol}>
+                              <th scope="row">
+                                <span className={`company-avatar avatar-${stock.tone}`} aria-hidden="true">{stock.initials}</span>
+                                <span className="watchlist-company">
+                                  <strong>{stock.symbol}</strong>
+                                  <span>{quote?.company_name || stock.symbol}</span>
+                                </span>
+                              </th>
+                              <td>
+                                {quote ? (
+                                  formatMoney(quote.price, quote.currency || 'USD')
+                                ) : (
+                                  <span className="quote-unavailable" role="status">Unavailable</span>
+                                )}
+                              </td>
+                              <td>
+                                {quote ? (
+                                  <span className={`change-badge change-${directionFor(quote.percent_change)}`}>
+                                    <ArrowMark direction={directionFor(quote.percent_change)} /> {formatChange(quote.percent_change)}
+                                  </span>
+                                ) : (
+                                  <span className="quote-unavailable" aria-label={`${stock.symbol} quote unavailable`}>—</span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
                 )}
-                <p className="mock-data-note"><span aria-hidden="true">ⓘ</span> Sample data for demonstration only</p>
+                <p className="quote-data-note" role={failedQuoteSymbols.length ? 'status' : undefined}>
+                  <span aria-hidden="true">ⓘ</span>
+                  {failedQuoteSymbols.length === 0
+                    ? 'Quotes supplied by the MarketSim API.'
+                    : `${failedQuoteSymbols.length} of ${QUOTE_SYMBOLS.length} stock quotes are unavailable.`}
+                </p>
               </section>
 
               <div className="movers-column">
@@ -257,7 +336,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="market-period-label">TODAY</span>
                   </div>
-                  <MarketMoverList movers={topGainers} direction="up" />
+                  <MarketMoverList movers={topGainers} direction="up" isLoading={quotesLoading} />
                 </section>
 
                 <section className="dashboard-panel movers-panel" aria-labelledby="losers-title">
@@ -268,14 +347,14 @@ export default function DashboardPage() {
                     </div>
                     <span className="market-period-label">TODAY</span>
                   </div>
-                  <MarketMoverList movers={topLosers} direction="down" />
+                  <MarketMoverList movers={topLosers} direction="down" isLoading={quotesLoading} />
                 </section>
               </div>
             </div>
 
             <footer className="dashboard-disclaimer">
               <span className="disclaimer-symbol" aria-hidden="true">i</span>
-              <p><strong>Educational use only.</strong> MarketSim is a paper-trading application. All prices, holdings, and performance figures shown are mock data for educational purposes and do not represent real market activity. This information is not financial advice.</p>
+              <p><strong>Educational use only.</strong> MarketSim is a paper-trading application. Portfolio balances and performance figures are demo data; stock quotes are retrieved through the MarketSim API and may be delayed. This information is not financial advice.</p>
             </footer>
           </>
         )}

@@ -69,6 +69,41 @@ The response includes the symbol, company and market details when available,
 price and daily change fields, and the provider's last updated time. Successful
 quotes are cached in memory for 60 seconds.
 
+## Historical stock prices
+
+Get daily historical prices for a stock:
+
+```http
+GET /api/stocks/AAPL/history?days=30
+```
+
+The `days` query parameter accepts values from 1 to 365 and defaults to 30.
+The response contains the symbol, exchange and currency when available, the
+daily interval, and price records ordered from oldest to newest. Twelve Data
+credentials continue to come from the `TWELVE_DATA_API_KEY` environment
+variable.
+
+Example response:
+
+```json
+{
+  "symbol": "AAPL",
+  "exchange": "NASDAQ",
+  "currency": "USD",
+  "interval": "1day",
+  "prices": [
+    {
+      "datetime": "2026-10-08",
+      "open": 253.0,
+      "high": 256.0,
+      "low": 252.5,
+      "close": 255.45,
+      "volume": 1234567
+    }
+  ]
+}
+```
+
 ## Run the tests
 
 From the repository root, run:
