@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { clearDemoSession } from '../services/demoSession'
 import {
   getApiHealth,
@@ -9,6 +9,7 @@ import {
   type StockQuote,
 } from '../services/api'
 import { getHistoryChartPoints } from '../services/historyChart'
+import { loadPaperPortfolio, summarizePortfolio } from '../services/paperPortfolio'
 import '../styles/DashboardPage.css'
 
 type WatchlistStock = {
@@ -179,6 +180,7 @@ function DashboardLoadingState() {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const [paperPortfolio] = useState(() => loadPaperPortfolio())
   const [quotes, setQuotes] = useState<Record<string, StockQuote>>({})
   const [historySymbol, setHistorySymbol] = useState('AAPL')
   const [historyLoadState, setHistoryLoadState] = useState<HistoryLoadState | null>(null)
@@ -187,6 +189,7 @@ export default function DashboardPage() {
   const [apiStatus, setApiStatus] = useState<'connecting' | 'connected' | 'unavailable'>('connecting')
 
   const isLoading = quotesLoading
+  const paperSummary = summarizePortfolio(paperPortfolio)
   const availableQuotes = Object.values(quotes)
   const topGainers = getTopMovers(availableQuotes, 'up')
   const topLosers = getTopMovers(availableQuotes, 'down')
@@ -270,7 +273,7 @@ export default function DashboardPage() {
     <div className="dashboard-page">
       <header className="dashboard-header">
         <div className="dashboard-header-inner">
-          <a className="dashboard-brand" href="#overview" aria-label="MarketSim dashboard home">
+          <Link className="dashboard-brand" to="/dashboard" aria-label="MarketSim dashboard home">
             <span className="dashboard-brand-mark" aria-hidden="true">
               <svg viewBox="0 0 32 32" fill="none">
                 <path d="M5 23.5 12.2 16l5 4.6L27 9" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -278,12 +281,12 @@ export default function DashboardPage() {
               </svg>
             </span>
             <span>Market<span className="dashboard-brand-accent">Sim</span></span>
-          </a>
+          </Link>
 
           <nav className="dashboard-nav" aria-label="Main navigation">
-            <a className="dashboard-nav-link is-active" href="#overview" aria-current="page">Dashboard</a>
+            <Link className="dashboard-nav-link is-active" to="/dashboard" aria-current="page">Dashboard</Link>
             <a className="dashboard-nav-link" href="#watchlist">Watchlist</a>
-            <a className="dashboard-nav-link" href="#portfolio">Portfolio</a>
+            <Link className="dashboard-nav-link" to="/portfolio">Portfolio</Link>
           </nav>
 
           <div className="dashboard-header-actions">
@@ -331,23 +334,23 @@ export default function DashboardPage() {
               <div className="portfolio-cards">
                 <article className="summary-card">
                   <div className="summary-card-top"><span className="summary-icon icon-cash" aria-hidden="true">$</span><span className="summary-label">Virtual cash</span></div>
-                  <p className="summary-value">$24,580<span className="summary-cents">.00</span></p>
-                  <p className="summary-footnote">Available to invest</p>
+                  <p className="summary-value">{formatMoney(paperSummary.availableCash)}</p>
+                  <p className="summary-footnote">Available virtual cash</p>
                 </article>
                 <article className="summary-card summary-card-highlight">
                   <div className="summary-card-top"><span className="summary-icon icon-value" aria-hidden="true">◫</span><span className="summary-label">Portfolio value</span></div>
-                  <p className="summary-value">$53,294<span className="summary-cents">.26</span></p>
-                  <p className="summary-footnote">Cash + investments</p>
+                  <p className="summary-value">{formatMoney(paperSummary.totalValue)}</p>
+                  <p className="summary-footnote">Total paper portfolio value</p>
                 </article>
                 <article className="summary-card">
-                  <div className="summary-card-top"><span className="summary-icon icon-daily" aria-hidden="true"><ArrowMark direction="up" /></span><span className="summary-label">Daily change</span></div>
-                  <p className="summary-value summary-positive">+$342<span className="summary-cents">.18</span></p>
-                  <p className="summary-footnote"><span className="change-badge change-up"><ArrowMark direction="up" /> +0.65%</span> today</p>
+                  <div className="summary-card-top"><span className="summary-icon icon-daily" aria-hidden="true">◫</span><span className="summary-label">Holdings value</span></div>
+                  <p className="summary-value">{formatMoney(paperSummary.holdingsValue)}</p>
+                  <p className="summary-footnote">Current market value</p>
                 </article>
                 <article className="summary-card">
                   <div className="summary-card-top"><span className="summary-icon icon-profit" aria-hidden="true">↗</span><span className="summary-label">Total profit / loss</span></div>
-                  <p className="summary-value summary-positive">+$3,294<span className="summary-cents">.26</span></p>
-                  <p className="summary-footnote"><span className="change-badge change-up"><ArrowMark direction="up" /> +6.59%</span> all time</p>
+                  <p className={`summary-value ${paperSummary.unrealizedProfitLoss >= 0 ? 'summary-positive' : 'summary-negative'}`}>{paperSummary.unrealizedProfitLoss > 0 ? '+' : ''}{formatMoney(paperSummary.unrealizedProfitLoss)}</p>
+                  <p className="summary-footnote">Unrealized profit / loss</p>
                 </article>
               </div>
             </section>

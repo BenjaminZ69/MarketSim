@@ -110,6 +110,7 @@
 .summary-value { overflow: hidden; margin: 12px 0 1px; color: #182a42; font-size: clamp(19px, 2.2vw, 23px); font-weight: 720; letter-spacing: -.7px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .summary-cents { font-size: .7em; font-weight: 620; letter-spacing: -.2px; }
 .summary-positive { color: #17865f; }
+.summary-negative { color: #b84444; }
 .summary-footnote { min-height: 17px; color: #98a2af; font-size: 9px; }
 .history-panel { margin-bottom: 16px; overflow: hidden; }
 .history-heading { min-height: 66px; }
