@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import DemoSessionGuard from './components/DemoSessionGuard'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
+import PortfolioPage from './pages/PortfolioPage'
 import SignupPage from './pages/SignupPage'
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         <Route element={<DemoSessionGuard />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
