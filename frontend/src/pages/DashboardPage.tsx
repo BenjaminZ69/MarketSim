@@ -6,6 +6,7 @@ import {
   type StockHistory,
   type StockQuote,
 } from '../services/api'
+import { getHistoryChartPoints } from '../services/historyChart'
 import '../styles/DashboardPage.css'
 
 type WatchlistStock = {
@@ -69,9 +70,7 @@ function formatHistoryDate(value: string) {
 }
 
 function StockHistoryChart({ history }: { history: StockHistory }) {
-  const prices = [...history.prices].sort((first, second) =>
-    first.datetime.localeCompare(second.datetime),
-  )
+  const prices = getHistoryChartPoints(history)
 
   if (prices.length === 0) {
     return <p className="history-message" role="status">No historical prices are available.</p>
@@ -82,13 +81,13 @@ function StockHistoryChart({ history }: { history: StockHistory }) {
   const padding = { top: 18, right: 12, bottom: 34, left: 12 }
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
-  const values = prices.map(({ close }) => close)
+  const values = prices.map(({ value }) => value)
   const min = Math.min(...values)
   const max = Math.max(...values)
   const range = max - min || 1
-  const coordinates = prices.map(({ close }, index) => ({
+  const coordinates = prices.map(({ value }, index) => ({
     x: padding.left + (prices.length === 1 ? chartWidth / 2 : (index / (prices.length - 1)) * chartWidth),
-    y: padding.top + ((max - close) / range) * chartHeight,
+    y: padding.top + ((max - value) / range) * chartHeight,
   }))
   const labels = [...new Set([0, Math.floor((prices.length - 1) / 2), prices.length - 1])]
 
@@ -107,7 +106,7 @@ function StockHistoryChart({ history }: { history: StockHistory }) {
       </svg>
       <div className="history-date-axis" aria-hidden="true">
         {labels.map((index) => (
-          <span key={index}>{formatHistoryDate(prices[index].datetime)}</span>
+          <span key={index}>{formatHistoryDate(prices[index].date)}</span>
         ))}
       </div>
     </div>
