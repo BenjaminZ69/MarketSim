@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.schemas import StockQuoteResponse
+from app.schemas import StockHistoryResponse, StockQuoteResponse
 from app.services.market_data import (
     InvalidProviderResponseError,
     InvalidStockSymbolError,
@@ -68,4 +68,48 @@ async def stock_quote(symbol: str) -> StockQuoteResponse:
         raise HTTPException(
             status_code=502,
             detail="Unable to retrieve a stock quote from the provider.",
+        ) from error
+
+
+@app.get("/api/stocks/{symbol}/history", response_model=StockHistoryResponse)
+async def stock_history(
+    symbol: str,
+    days: int = Query(default=30, ge=1, le=365),
+) -> StockHistoryResponse:
+    try:
+        return await market_data_service.get_history(symbol, days)
+    except InvalidStockSymbolError as error:
+        raise HTTPException(
+            status_code=422,
+            detail="Invalid stock symbol.",
+        ) from error
+    except MissingApiKeyError as error:
+        raise HTTPException(
+            status_code=503,
+            detail="Stock history service is not configured.",
+        ) from error
+    except UnknownStockError as error:
+        raise HTTPException(
+            status_code=404,
+            detail="Stock symbol was not found.",
+        ) from error
+    except ProviderRateLimitError as error:
+        raise HTTPException(
+            status_code=429,
+            detail="Stock history provider rate limit reached. Try again later.",
+        ) from error
+    except ProviderTimeoutError as error:
+        raise HTTPException(
+            status_code=504,
+            detail="Stock history provider request timed out.",
+        ) from error
+    except InvalidProviderResponseError as error:
+        raise HTTPException(
+            status_code=502,
+            detail="Stock history provider returned invalid data.",
+        ) from error
+    except ProviderError as error:
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to retrieve historical stock data from the provider.",
         ) from error

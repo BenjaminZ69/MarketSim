@@ -111,6 +111,20 @@
 .summary-cents { font-size: .7em; font-weight: 620; letter-spacing: -.2px; }
 .summary-positive { color: #17865f; }
 .summary-footnote { min-height: 17px; color: #98a2af; font-size: 9px; }
+.history-panel { margin-bottom: 16px; overflow: hidden; }
+.history-heading { min-height: 66px; }
+.history-symbol-label { display: flex; align-items: center; gap: 8px; color: #8793a2; font-size: 10px; }
+.history-symbol-label select { min-width: 88px; padding: 7px 25px 7px 9px; border: 1px solid #e1e7ed; border-radius: 6px; color: #34445a; background: #fff; font: inherit; font-weight: 650; }
+.history-symbol-label select:focus-visible { outline: 3px solid rgba(22, 168, 118, .2); outline-offset: 2px; }
+.history-chart-content { min-height: 190px; padding: 12px 18px 10px; }
+.history-chart-wrap { width: 100%; }
+.history-chart { display: block; width: 100%; height: 190px; overflow: visible; }
+.history-gridline { stroke: #edf1f4; stroke-width: 1; }
+.history-line { fill: none; stroke: #159b6e; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; }
+.history-point { fill: #159b6e; stroke: #fff; stroke-width: 2; }
+.history-date-axis { display: flex; justify-content: space-between; gap: 10px; margin-top: -2px; color: #8a96a6; font-size: 9px; }
+.history-message { display: grid; min-height: 166px; place-items: center; margin: 0; padding: 20px; color: #8592a2; font-size: 11px; text-align: center; }
+.history-error { color: #9c5555; }
 .change-badge { display: inline-flex; align-items: center; gap: 3px; width: fit-content; padding: 3px 6px; border-radius: 5px; font-size: 9px; font-weight: 700; line-height: 1.15; white-space: nowrap; }
 .change-up { color: #17865f; background: #eaf7f0; }
 .change-down { color: #b84444; background: #fdf0ef; }
@@ -149,8 +163,9 @@
 .watchlist-company { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
 .watchlist-company strong { color: #27384f; font-size: 10px; font-weight: 700; }
 .watchlist-company > span { overflow: hidden; max-width: 190px; color: #929dac; font-size: 9px; font-weight: 450; text-overflow: ellipsis; white-space: nowrap; }
-.mock-data-note { display: flex; align-items: center; gap: 5px; margin: auto 0 0; padding: 11px 18px; border-top: 1px solid #f1f3f6; color: #9aa5b2; font-size: 9px; }
-.mock-data-note span { color: #8c99a8; font-size: 11px; }
+.quote-data-note { display: flex; align-items: center; gap: 5px; margin: auto 0 0; padding: 11px 18px; border-top: 1px solid #f1f3f6; color: #9aa5b2; font-size: 9px; }
+.quote-data-note span { color: #8c99a8; font-size: 11px; }
+.quote-unavailable { color: #929dac; font-size: 9px; font-weight: 500; }
 .dashboard-empty { color: #8592a2; font-size: 10px; text-align: center; }
 .watchlist-empty { min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 24px; }
 .empty-watch-icon { display: grid; width: 39px; height: 39px; margin-bottom: 3px; place-items: center; border-radius: 12px; background: #f1f4f7; color: #6e7f92; font-size: 25px; }
@@ -245,7 +260,7 @@
   .watchlist-table { min-width: 415px; }
   .watchlist-table th, .watchlist-table td { padding-inline: 10px; }
   .watchlist-table tbody th, .watchlist-table thead th:first-child { padding-left: 12px; }
-  .mock-data-note { padding-inline: 12px; }
+  .quote-data-note { padding-inline: 12px; }
   .movers-column { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .movers-panel { min-height: auto; }
   .mover-name-wrap > span { max-width: 180px; }
