@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { createDemoSession } from '../services/demoSession'
 import '../styles/LoginPage.css'
 
 type LoginValues = {
@@ -24,20 +25,22 @@ function validate(values: LoginValues): LoginErrors {
 }
 
 export default function LoginPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const signupMessage = (location.state as { demoMessage?: string } | null)?.demoMessage
   const [values, setValues] = useState<LoginValues>({ email: '', password: '' })
   const [errors, setErrors] = useState<LoginErrors>({})
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setSubmitted(false)
     const nextErrors = validate(values)
     setErrors(nextErrors)
 
     if (Object.keys(nextErrors).length === 0) {
-      setSubmitted(true)
+      createDemoSession()
+      navigate('/dashboard', { replace: true })
     }
   }
 
@@ -45,7 +48,6 @@ export default function LoginPage() {
     const nextValues = { ...values, [field]: value }
     setValues(nextValues)
     if (errors[field]) setErrors(validate(nextValues))
-    setSubmitted(false)
   }
 
   return (
@@ -61,13 +63,15 @@ export default function LoginPage() {
             </span>
             <span>Market<span className="brand-accent">Sim</span></span>
           </Link>
-          <span className="secure-label"><span aria-hidden="true">●</span> YOUR MARKET, SIMPLIFIED</span>
+          <span className="secure-label"><span aria-hidden="true">●</span> DEMO MODE · NO ACCOUNT</span>
         </header>
 
         <div className="login-heading">
           <div className="eyebrow">WELCOME BACK</div>
           <h1 id="login-title">Log in to your account</h1>
           <p>Pick up where your investing journey left off.</p>
+          <p className="demo-auth-note">Demo mode: credentials are checked for form validity only and are not sent or saved.</p>
+          {signupMessage && <p className="login-notice" role="status">{signupMessage}</p>}
         </div>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
@@ -124,7 +128,6 @@ export default function LoginPage() {
           </label>
 
           <button className="login-submit" type="submit">Log In <span aria-hidden="true">→</span></button>
-          {submitted && <p className="login-notice" role="status">Your details are valid. Backend authentication will be connected later.</p>}
         </form>
 
         <footer className="login-footer">

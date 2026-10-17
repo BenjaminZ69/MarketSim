@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { clearDemoSession } from '../services/demoSession'
 import {
   getApiHealth,
   getStockHistory,
@@ -176,6 +178,7 @@ function DashboardLoadingState() {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const [quotes, setQuotes] = useState<Record<string, StockQuote>>({})
   const [historySymbol, setHistorySymbol] = useState('AAPL')
   const [historyLoadState, setHistoryLoadState] = useState<HistoryLoadState | null>(null)
@@ -289,7 +292,7 @@ export default function DashboardPage() {
               {apiStatusText}
             </span>
             <span className="demo-indicator"><span aria-hidden="true" /> DEMO ACCOUNT</span>
-            <button className="signout-button" type="button" title="Demo button; no account is connected">
+            <button className="signout-button" type="button" onClick={() => { clearDemoSession(); navigate('/login', { replace: true }) }}>
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M8 3.5H4.75a1.25 1.25 0 0 0-1.25 1.25v10.5a1.25 1.25 0 0 0 1.25 1.25H8M12.5 6l4 4-4 4M7 10h9.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

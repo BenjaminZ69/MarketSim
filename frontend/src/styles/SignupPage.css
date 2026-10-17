@@ -47,6 +47,7 @@
 .signup-brand-mark svg { width: 25px; height: 25px; }
 .signup-brand-accent { color: var(--signup-green); }
 .signup-header-note { color: #718096; font-size: 13px; }
+.signup-demo-label { margin-right: 12px; color: #168b64; font-size: 9px; font-weight: 750; letter-spacing: .7px; white-space: nowrap; }
 .signup-header-note a, .signup-login-prompt a { color: #108d63; font-weight: 700; margin-left: 4px; }
 
 .signup-main { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(480px, 1fr); }
@@ -90,6 +91,7 @@
 .signup-form-eyebrow { color: #14956a; font-size: 9px; letter-spacing: 1.35px; }
 .signup-heading h2 { margin: 9px 0 5px; color: #14243b; font-size: 29px; font-weight: 700; letter-spacing: -1px; line-height: 1.22; }
 .signup-heading > p { color: #78869a; font-size: 13px; }
+.signup-heading > .signup-demo-note { border-left: 2px solid #16a876; padding: 7px 10px; background: #f0faf5; color: #527464; font-size: 11px; }
 .signup-form { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; }
 .signup-field { display: flex; flex-direction: column; gap: 6px; }
 .signup-field label { color: #273950; font-size: 12px; font-weight: 650; }

@@ -51,6 +51,7 @@
 .eyebrow { margin-bottom: 9px; color: #1aa96c; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
 .login-heading h1 { margin: 0; color: var(--navy); font: 700 27px/1.25 'Manrope', sans-serif; letter-spacing: -0.8px; }
 .login-heading p { margin: 9px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.login-heading .demo-auth-note { margin-top: 12px; border-left: 2px solid #21b878; padding: 7px 10px; background: #f1fbf6; color: #527464; font-size: 11px; }
 
 .login-form { display: flex; flex-direction: column; gap: 20px; }
 .form-field label,
